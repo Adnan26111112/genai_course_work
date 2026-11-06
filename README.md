@@ -26,7 +26,7 @@ Two repos live side by side in `Documents`: **genai-course-work** (yours — you
 | 8 | Clone this course repo alongside | `cd ~\Documents` · `git clone https://github.com/byruajit/genai-agents-course.git` · `cd genai-agents-course` · `type .gitignore` · `git pull` |
 | 9 | **Checkpoint** | Your GitHub page shows ≥ 2 commits and the merge; `git config --global --list` shows your name and email |
 
-Start every session with `git pull` in this repo.
+Start every session with `git pull` in this repo. If it refuses because you saved a notebook, see [UPDATING.md](UPDATING.md) (or run `uv run python tools/update_course.py`).
 
 **Secrets:** `.env` is in `.gitignore`, so `git add` ignores it. If a key ever reaches a commit it is public within minutes — revoke it in the Groq console and create a new one.
 
@@ -79,6 +79,18 @@ You create your own free Groq key at console.groq.com. It lives in `.env` and no
 - Submission form: _(added by instructor)_
 - Baseline quiz: _(added by instructor)_
 - Fix videos: _(coming)_
+
+## Session 9a — your environment and your first LLM call, explained
+
+```powershell
+git pull
+uv sync
+uv run jupyter lab module01/s09a_first_call.ipynb
+uv run pytest tests/test_s09a.py         # offline check of the notebook
+```
+A guided notebook for Session 2's setup and `hello.py`: the two repositories, `uv`, `.env`, and the first call rebuilt cell by cell (whole reply, then streamed, then the token count). Runs without a key: model cells say "skipped".
+
+**All notebooks from Session 9a to 16 now have long explanations** (Part A: why, the words you need, how the session is built; six steps per section; Part C: summary, interview questions, troubleshooting). If `git pull` complains that your local changes would be overwritten, follow [UPDATING.md](UPDATING.md).
 
 ## Session 9b — tokens, cost, context, embeddings
 
@@ -176,12 +188,184 @@ Pre-read: `module02/reading_reasoning.md` (10 minutes). Terms: `module02/terms_s
 200,000-a-day limit; answers are remembered on disk (`~/.genai_course/`), so re-running a cell is free. Your submission is `experiments/s15_accuracy_table.md`
 and version-2 entries in `prompts/library.md`, both pushed to **your own** `genai-course-work` repository.
 
+## Session 16 — structured prompting: tags, templates, and a system prompt in a file
+
+```powershell
+git pull
+uv sync                                  # no new packages (Jinja2 already comes with Jupyter)
+uv run jupyter lab module02/s16_structured.ipynb
+$env:WORK_REPO = "$HOME\Documents\genai-course-work"
+uv run pytest tests/test_s16.py -rs      # checkpoint: your classifier needs 16/20 on the held-out set
+```
+Pre-read: `module02/reading_structured.md` (10 minutes). Terms: `module02/terms_s16.md`. The customer-support classifier (card, loan, account, other): customer text inside
+`<ticket>` tags, a Jinja template with variables, and the system prompt as a file loaded at runtime. **Budget:** about 40,000-70,000 tokens of a free key's
+200,000-a-day limit; answers are remembered on disk (`~/.genai_course/`), so re-running an unchanged cell is free. Your submission is `prompts/support_classifier/system.md`,
+`prompts/support_classifier/user.j2` and `experiments/s16_heldout.md`, pushed to **your own** `genai-course-work` repository. The checkpoint test is skipped without a key
+(read the reason with `-rs`: a skip is not a pass) and fails on purpose with a key but no `WORK_REPO`.
+
+## Session 17 — prompt evaluation: a golden set, a rubric, and a judge
+
+```powershell
+git pull
+uv sync                                  # no new packages
+uv run jupyter lab module02/s17_evaluation.ipynb
+$env:WORK_REPO = "$HOME\Documents\genai-course-work"
+uv run pytest tests/test_s17.py -rs      # checkpoint: a complete evaluation report, both prompts, 20 tickets, + a 5-ticket spot-check
+```
+No pre-read notebook: Part A of `s17_evaluation.ipynb` is self-contained. Scores your Session 14 baseline against your Session 16 structured prompt
+on the SAME twenty held-out tickets (reused, not new data), using a second model call as an LLM judge against a four-criterion rubric (correct label,
+cites the right house rule, follows the reply format, invents no policy). Guards against the judge's own biases (position, verbosity, self-preference)
+with a shuffled answer order and a five-ticket human spot-check. **Budget:** about 60,000-90,000 tokens of a free key's 200,000-a-day limit — roughly
+double Session 16's, since every ticket is answered AND judged, for both prompts. Your submission is `experiments/s17_eval.md`, pushed to **your own**
+`genai-course-work` repository; your Session 16 `prompts/support_classifier/` files are read, not changed. The checkpoint test is skipped without a key
+(read the reason with `-rs`: a skip is not a pass).
+
+## Session 18 — defensive prompting: attacking your own classifier, on purpose
+
+```powershell
+git pull
+uv sync                                  # no new packages
+uv run jupyter lab module02/s18_defensive_prompting.ipynb
+$env:WORK_REPO = "$HOME\Documents\genai-course-work"
+uv run pytest tests/test_s18.py -rs      # checkpoint: a complete defense report, 16 attacks x 2 prompts, + clean accuracy held
+```
+Pre-read: none, Part A of `s18_defensive_prompting.ipynb` is self-contained. Terms: `module02/terms_s18.md`. Attacks Session 16's classifier on purpose
+with 16 adversarial tickets across four families (override, authority, exfiltrate, smuggle), then hardens the system prompt with an instruction
+hierarchy and a scratchpad/final reply split, and re-measures. Session 16's own held-out set checks the defense did not break ordinary accuracy.
+**Budget:** about 50,000-80,000 tokens of a free key's 200,000-a-day limit (16 attack tickets + 20 clean tickets, each prompt). Your submission is
+`experiments/s18_defense.md`, pushed to **your own** `genai-course-work` repository; your Session 16 files are read, not changed. The checkpoint test
+is skipped without a key (read the reason with `-rs`: a skip is not a pass).
+
+## Session 19 — chat state & memory windows: a conversation that actually remembers
+
+```powershell
+git pull
+uv sync                                  # no new packages
+uv run jupyter lab module03/s19_chat_memory.ipynb
+$env:WORK_REPO = "$HOME\Documents\genai-course-work"
+uv run pytest tests/test_s19.py -rs      # checkpoint: all three memory strategies scored, naive recalls, both fixes cost less
+```
+Pre-read: Part A of `s19_chat_memory.ipynb` is self-contained. Terms: `module03/terms_s19.md`. Starts Module 3 (LLM Applications) with a new,
+standalone running example — BankAssist, a bank product-FAQ assistant — built around one fact every session depends on: an API call is stateless,
+and "the assistant remembers" is your own code resending the conversation's `messages` list on every call. Builds a real 17-turn scripted conversation
+with a fact planted at turn 2 and asked for back at turn 17, measures the naive (resend-everything) cost growth, then fixes it two ways — a sliding
+window (flat cost, silent forgetting) and summarization (recovers recall, one extra call, a new risk of a wrong summary) — and compares all three
+honestly rather than assuming either fix "just works." **Budget:** about 20,000-35,000 tokens of a free key's 200,000-a-day limit (three 17-turn
+conversations, plus summarization's own extra calls). Your submission is `experiments/s19_chat_memory.md`, pushed to **your own** `genai-course-work`
+repository. The checkpoint test is skipped without a key (read the reason with `-rs`: a skip is not a pass).
+
+## Session 20 — function calling: giving BankAssist hands
+
+```powershell
+git pull
+uv sync                                  # no new packages
+ollama pull llama3.2:3b                  # only if your .env points at Ollama (BASE_URL=http://localhost:11434/v1)
+uv run jupyter lab module03/s20_function_calling.ipynb
+$env:WORK_REPO = "$HOME\Documents\genai-course-work"
+uv run pytest tests/test_s20.py -rs      # checkpoint: golden set scored four ways, model named
+```
+Pre-read: Part A of `s20_function_calling.ipynb` is self-contained. Terms: `module03/terms_s20.md`. BankAssist from Session 19
+gets three tools (`calculate_emi`, `get_rate`, `check_eligibility`) using the raw OpenAI-compatible API, no framework. The round trip is
+built by hand, then in a loop capped at three steps. Students watch a model call the wrong tool with invented arguments, then fix it three
+ways: prompt guidance, argument validation fed back to the model, and a router that decides "needs a tool?" first. A 10-question golden set
+is scored four ways (right tool, valid arguments, correct answer). Runs unchanged on Groq `openai/gpt-oss-20b` or local Ollama
+`llama3.2:3b`. **Budget:** on Groq about 30,000-50,000 tokens of the 200,000-a-day limit; on Ollama, free. Answers are cached in
+`~/.genai_course/s20_cache.json`. Your submission is `experiments/s20_tools.md`, pushed to **your own** `genai-course-work` repository.
+Instructor pre-class run on any model: `uv run python module03/s20_golden_run.py` (or `--ollama llama3.2:3b`).
+
+## Session 21 — LangChain: your first build
+
+```powershell
+git pull
+uv sync                                  # NEW: langchain==1.4.7 and langchain-openai==1.1.9 (pinned)
+$env:WORK_REPO = "$HOME\Documents\genai-course-work"
+uv run jupyter lab module03/s21_langchain_build.ipynb      # Section 1 copies the starter into your work repo
+uv run python $env:WORK_REPO\s21\bankassist_lc.py        # run YOUR file, from the course repo folder
+uv run pytest tests/test_s21.py -rs      # checkpoint: tests the functions YOU wrote (offline, no tokens)
+```
+Pre-read: Part A of `s21_langchain_build.ipynb`. Terms: `module03/terms_s21.md`. **This is the first session where you write the code.**
+You build BankAssist again with LangChain in your own file, `s21/bankassist_lc.py` in **your own** `genai-course-work` repository,
+starting from `module03/s21_starter.py`: five TODOs (model, chain, `@tool`, your capped tool loop, and a stretch second tool), with a
+check after each. Using ChatGPT is allowed: paste `module03/s21_version_card.md` first, **never paste your `.env` or API key**, and be
+ready to explain your code. Stuck? `module03/s21_common_errors.md`. Runs on Groq `openai/gpt-oss-20b` or Ollama `llama3.2:3b`.
+**Budget:** a few thousand tokens; the checkpoint itself makes no model calls. Submission: commit and push `s21/bankassist_lc.py`.
+
+## Session 22 — LiteLLM: one call format, many models, fallbacks and cost
+
+```powershell
+git pull
+uv sync                                  # NEW: litellm==1.80.0 (pinned)
+$env:WORK_REPO = "$HOME\Documents\genai-course-work"
+uv run jupyter lab module03/s22_litellm_build.ipynb      # Section 1 copies the starter into your work repo
+uv run python $env:WORK_REPO\s22\bankassist_llm.py       # run YOUR file, from the course repo folder
+uv run pytest tests/test_s22.py -rs      # checkpoint: tests the functions YOU wrote (offline, no tokens)
+```
+Pre-read: Part A of `s22_litellm_build.ipynb`. Terms: `module03/terms_s22.md`. Build-your-own, like Session 21: in
+`s22/bankassist_llm.py` (your own work repo) you call any provider with one `completion()` call, compare two models by
+changing a string, add a Router that falls back when the primary fails (you break the primary on purpose), and log
+tokens, cost and latency per request. Your models come from your existing `.env` (Groq `gpt-oss-20b` primary, the larger
+`gpt-oss-120b` as fallback; Ollama users see the notebook's table). ChatGPT: paste `module03/s22_version_card.md` first,
+never paste your `.env` or key. Stuck? `module03/s22_common_errors.md`. **Budget:** a few thousand tokens.
+
+## Session 23 — serving BankAssist: FastAPI, memory per session, streaming
+
+```powershell
+git pull
+uv sync                                  # NEW: fastapi==0.162.0 and uvicorn==0.54.0 (pinned)
+$env:WORK_REPO = "$HOME\Documents\genai-course-work"
+uv run jupyter lab module03/s23_serving.ipynb             # Section 1 copies the starter into your work repo
+uv run python $env:WORK_REPO\s23\app.py                  # terminal 1: YOUR server on http://127.0.0.1:8000 (/docs to try it)
+# Stuck, or want to see it working first?  module03\s23_simple.py is a COMPLETE server: copy it to $env:WORK_REPO\s23\app.py,
+# run it the same way, then change one CHANGE ME line at a time (memory window, /health, prompt, step cap, request size).
+uv run python module03/s23_client.py                     # terminal 2: talks to it - memory, sessions, 422, a streamed answer
+uv run pytest tests/test_s23.py -rs      # checkpoint: tests YOUR endpoints with a scripted model (offline, no tokens)
+```
+Pre-read: Part A of `s23_serving.ipynb`. Terms: `module03/terms_s23.md`. You write `s23/app.py` in **your own** work repository from
+`module03/s23_starter.py`. PART 1 is given: Session 21's BankAssist, now streaming. PART 2 is yours, with six TODOs: `GET /health`, Pydantic
+request and response models, a sliding-window `window()`, `POST /chat` with one memory per `session_id`, `POST /chat/stream` as Server-Sent
+Events, and a stretch `DELETE /sessions/{id}`. ChatGPT: paste `module03/s23_version_card.md` first. Stuck? `module03/s23_common_errors.md`.
+Section 10 bridges to LiteLLM (S22) and the gateway (S23b). **Homework, required for Session 23b:** Docker Desktop installed and
+`docker run hello-world` working. Submission: commit and push `s23/app.py`.
+
+## Session 23b — Gateway + Docker: the LiteLLM proxy, in containers
+
+```powershell
+git pull
+docker run hello-world                                    # Docker must work (homework); no Docker? see Path B in the lab
+cd module03\s23b_gateway ; docker compose up --build litellm      # terminal 1: the gateway on http://localhost:4000
+uv run python module03/s23b_client.py                    # terminal 2 (course repo folder): answer, model group, fallbacks, cost
+docker compose up --build                                 # gateway + a tiny FastAPI app -> http://localhost:8000/docs
+uv run pytest tests/test_s23b.py -rs                      # checkpoint (offline; plus a live check while the gateway runs)
+```
+Lab guide: `module03/s23b_lab.md` (a terminal session, no notebook). Terms: `module03/terms_s23b.md`. Errors: `module03/s23b_common_errors.md`.
+LiteLLM from S22, now run as a **gateway server**: `config.yaml` maps the model groups `shopassist` / `shopassist-backup` to Groq models
+with a fallback; apps send one URL and one key. You call it with raw HTTP and with LangChain, break the primary model in `config.yaml` and
+watch the gateway fall back, then start the gateway and an app together with Docker Compose. Your Groq key stays in your course `.env`
+(`API_KEY`) and never enters an image. Prepares Mini-Project 1 (ShopAssist).
+
+## Mini-Project 1 — ShopAssist (weekend, 2 × 2.5 h, solo)
+
+```powershell
+git pull
+# on GitHub: create an EMPTY repo called shopassist-mp1, then git clone it (e.g. into Documents)
+$env:MP1_REPO = "$HOME\Documents\shopassist-mp1"
+uv run python module03/mp1_setup.py                       # copies the starter + writes YOUR repo's .env (git-ignored)
+cd $env:MP1_REPO ; uv sync ; docker compose up --build    # gateway + ShopAssist -> http://localhost:8000/docs
+uv run python eval/run_eval.py                            # evidence: 10 golden, a memory probe, 4 attacks
+cd <course repo> ; uv run pytest tests/test_mp1.py -rs    # checkpoint (offline; reads YOUR repo via MP1_REPO)
+```
+Errors: `module03/mp1_common_errors.md`. A new app, built alone: order support for Northwind Store (a fictional online store) with
+LangChain tools, per-session memory, a defended prompt and streamed answers (S18-S23), reaching Groq **only through the LiteLLM
+gateway** and run with Docker Compose (S23b). Six tasks (T1-T6): return rules, argument validation, Security rules, memory choice,
+`/health`, and the README/report. Commit after each task. BankAssist stays the practice app.
+
 ## Layout
 ```
-module01/                   Session 9b notebook, helpers, pre-read
+module01/                   Sessions 9a-13 notebooks, helpers, pre-reads
 hello.py                    Session 2 first call
 list_models.py              which models your key can use
 tests/test_setup.py         Session 2 checkpoint
+tests/test_s09a.py          Session 9a notebook check (offline)
 tests/test_s09.py           Session 9b checkpoint
 tests/test_s10.py           Session 10 checkpoint
 showcase/a2_insurance/      Showcase A2 (Insurance workflow) + its own tests
@@ -191,8 +375,23 @@ tests/test_s12.py           Session 12 checkpoint
 tests/test_s13.py           Session 13 checkpoint
 tests/test_s14.py           Session 14 checkpoint
 tests/test_s15.py           Session 15 checkpoint
-module02/                   Module 2 (prompt engineering): S14-S15 notebooks, helpers, work-repo steps
+tests/test_s16.py           Session 16 checkpoint
+tests/test_s17.py           Session 17 checkpoint
+tests/test_s18.py           Session 18 checkpoint
+tests/test_s19.py           Session 19 checkpoint
+tests/test_s20.py           Session 20 checkpoint
+tests/test_s21.py           Session 21 checkpoint (tests your own s21/bankassist_lc.py)
+tests/test_s22.py           Session 22 checkpoint (tests your own s22/bankassist_llm.py)
+tests/test_s23.py           Session 23 checkpoint (tests your own s23/app.py)
+tests/test_s23b.py          Session 23b checkpoint (gateway files; live check while the gateway runs)
+module03/s23b_gateway/      Session 23b gateway: config.yaml, docker-compose.yml, proxy + hello_app Dockerfiles
+tests/test_mp1.py           Mini-Project 1 checkpoint (tests your own shopassist-mp1 repo)
+module03/mp1_starter/       Mini-Project 1 starter: ShopAssist app, gateway, Compose, eval set
+module02/                   Module 2 (prompt engineering): S14-S18 notebooks, helpers, work-repo steps
+module03/                   Module 3 (LLM applications): S19-S23 notebooks, helpers, work-repo steps
 cheatsheet/python-for-agents.md
+tools/update_course.py      safe update: back up your edited notebooks, then git pull
+UPDATING.md                 how to update when git pull refuses
 .env.example                copy to .env
 pyproject.toml              pinned dependencies (uv sync)
 ```
